@@ -1,0 +1,68 @@
+# backend/.gitignore
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+build/
+
+# Uploads
+uploads/
+temp/
+media/
+files/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# MongoDB
+data/
+dump/
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Stripe
+*.pem
+*.key
+*.crt
+
+# PM2
+.pm2/
+
+# Environment
+.env.development
+.env.production
+.env.local
+.env.test
