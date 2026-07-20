@@ -16,11 +16,14 @@ app.use(
       "http://localhost:5173",
       "https://car-rental-frontend-fm3n.vercel.app",
     ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "x-auth-token"],
     credentials: true,
+    maxAge: 86400,
   }),
 );
+
+app.options("*", cors());
 
 app.use("/api/v1/webhook", webhookRouter);
 
