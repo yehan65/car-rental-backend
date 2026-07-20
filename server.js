@@ -20,6 +20,24 @@ mongoose.connection.once("open", () =>
 
 mongoose.connection.on("error", (error) => console.error(`Error: ${error}`));
 
+// Add a simple health check endpoint
+app.get("/api/v1/health", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
+// Also handle root
+app.get("/", (req, res) => {
+  res.json({
+    message: "🚗 Car Rental API is running!",
+    docs: "/api/v1/docs",
+  });
+});
+
 server.listen(PORT, () => {
   console.log(`Listening on PORT ${PORT}...`);
 });
