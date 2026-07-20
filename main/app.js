@@ -10,10 +10,6 @@ const webhookRouter = require("../routes/webhook.routes");
 
 const app = express();
 
-app.use("/api/v1/webhook", webhookRouter);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: [
@@ -25,6 +21,11 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use("/api/v1/webhook", webhookRouter);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(methodOverrie("_static"));
 
 app.use("/api/v1/users", userRouter);
