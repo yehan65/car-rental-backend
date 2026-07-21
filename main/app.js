@@ -10,6 +10,18 @@ const webhookRouter = require("../routes/webhook.routes");
 
 const app = express();
 
+// ✅ Global error handlers (MUST be at the top)
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
+  // Don't crash!
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise);
+  console.error("❌ Reason:", reason);
+  // Don't crash!
+});
+
 app.use(
   cors({
     origin: [
@@ -36,5 +48,14 @@ app.use("/api/v1/cars", carRouter);
 app.use("/api/v1/payments", paymentRouter);
 app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/admin", adminRouter);
+
+// ✅ Global error handler
+app.use((err, req, res, next) => {
+  console.error("❌ Server error:", err);
+  res.status(500).json({
+    success: false,
+    message: err.message || "Server Error",
+  });
+});
 
 module.exports = app;
