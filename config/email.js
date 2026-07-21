@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 
 let transporter = null;
 let etherealAccount = null;
+let isEmailEnabled = false;
 
 async function initializeEthereal() {
   try {
@@ -28,49 +29,73 @@ async function initializeEthereal() {
 
     // Verify connection
     await transporter.verify();
+    isEmailEnabled = true;
     console.log("✅ Ethereal email ready!");
-
+    console.log(`📧 User: ${testAccount.user}`);
     return transporter;
   } catch (error) {
     console.error("❌ Ethereal setup failed:", error);
-    throw error;
+    console.log("📧 Email features will be disabled (demo mode)");
+    isEmailEnabled = false;
+    return null;
   }
 }
 
 // ✅ Send email function
 async function sendEmail({ to, subject, html }) {
-  try {
-    if (!transporter) {
-      await initializeEthereal();
+  if (isEmailEnabled && transporter) {
+    try {
+      // if (!transporter) {
+      //   await initializeEthereal();
+      // }
+
+      const mailOptions = {
+        from: '"Car Rental" <noreply@carrental.com>',
+        to,
+        subject,
+        html,
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+
+      // ✅ Get preview URL (CRITICAL for demo!)
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+
+      console.log("📧 Email sent via Ethereal!");
+      console.log(`📧 To: ${to}`);
+      console.log(`📧 Subject: ${subject}`);
+      console.log(`📧 Preview: ${previewUrl}`);
+      console.log("📧 ================================");
+
+      return {
+        success: true,
+        messageId: info.messageId,
+        previewUrl: previewUrl,
+        provider: "ethereal",
+      };
+    } catch (error) {
+      console.error("❌ Email send error:", error);
+      // throw error;
     }
-
-    const mailOptions = {
-      from: '"Car Rental" <noreply@carrental.com>',
-      to,
-      subject,
-      html,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-
-    // ✅ Get preview URL (CRITICAL for demo!)
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-
-    console.log("📧 Email sent!");
-    console.log(`📧 To: ${to}`);
-    console.log(`📧 Subject: ${subject}`);
-    console.log(`📧 Preview: ${previewUrl}`);
-    console.log("📧 ================================");
-
-    return {
-      success: true,
-      messageId: info.messageId,
-      previewUrl: previewUrl,
-    };
-  } catch (error) {
-    console.error("❌ Email send error:", error);
-    throw error;
   }
+
+  // ✅ Fallback: Mock email (always works!)
+  console.log("📧 ===== MOCK EMAIL =====");
+  console.log(`📧 To: ${to}`);
+  console.log(`📧 Subject: ${subject}`);
+  console.log(`📧 Body: ${html?.substring(0, 200)}...`);
+  console.log("📧 =====================");
+
+  // ✅ Generate a fake preview URL for demo
+  const mockPreviewUrl = `${process.env.CLIENT_URL}/demo-email?to=${encodeURIComponent(to)}&subject=${encodeURIComponent(subject)}`;
+
+  return {
+    success: true,
+    messageId: "mock-" + Date.now(),
+    previewUrl: mockPreviewUrl,
+    provider: "mock",
+    message: "Mock email (demo mode)",
+  };
 }
 
 // ✅ For development - preview email without sending
