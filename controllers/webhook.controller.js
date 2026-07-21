@@ -97,12 +97,10 @@ class WebhookController {
         "-password -phone -nic -emailVerificationToken -emailVerificationExpires",
       );
       if (!user.isEmailVerified) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "You must verify your account before make a booking!",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "You must verify your account before make a booking!",
+        });
       }
 
       // ✅ Check if booking already exists
