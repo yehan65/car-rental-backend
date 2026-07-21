@@ -19,11 +19,11 @@ app.use(
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "x-auth-token"],
     credentials: true,
-    maxAge: 86400,
+    // maxAge: 86400,
   }),
 );
 
-app.options("*", cors());
+// app.options("*", cors());
 
 app.use("/api/v1/webhook", webhookRouter);
 
