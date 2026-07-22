@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
 const { emailTemplates, sendEmail } = require("../config/email");
+const { setDefaultAutoSelectFamily } = require("net");
 
 class UserController {
   async httpNewUser(req, res) {
@@ -180,7 +181,7 @@ class UserController {
   async httpChangePassword(req, res) {
     try {
       const currentUser = req.user;
-      const { currentPassowrd, newPassword } = req.body;
+      const { currentPassword, newPassword } = req.body;
 
       const user = await User.findById(currentUser._id);
       if (!user) {
@@ -189,14 +190,15 @@ class UserController {
           .json({ success: false, message: "Oops, something went wrong" });
       }
 
-      const isMatch = await user.comparePassword(currentPassowrd);
+      const isMatch = await user.comparePassword(currentPassword);
       if (!isMatch) {
         return res
           .status(400)
           .json({ success: false, message: "Invalid passowrd!" });
       }
 
-      user.password = await bcrypt.hash(newPassword, 10);
+      user.password = newPassword;
+
       await user.save();
       return res
         .status(200)
@@ -299,18 +301,26 @@ class UserController {
 
   async httpForgotPassword(req, res) {
     try {
-      const currentUser = req.user;
+      const { email } = req.body;
 
-      const user = await User.findOne({
-        _id: currentUser._id,
-        email: currentUser.email,
-      });
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Oops, somethig went wrong!" });
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is required",
+        });
       }
 
+      const user = await User.findOne({
+        email: email.toLowerCase().trim(),
+      });
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "No account found with this email!",
+        });
+      }
+
+      // Generate Token
       const resetToken = crypto.randomBytes(32).toString("hex");
       const expiresIn = Date.now() + 3600000; // 1 hour
 
@@ -319,11 +329,22 @@ class UserController {
 
       await user.save();
 
-      const resetURL = `http://localhost:8000/api/v1/auth/forgot/password/${resetToken}`;
+      const resetURL = `http://localhost:5173/reset-password?token=${resetToken}`;
+      const emailTemplate = emailTemplates.passwordReset(
+        user.fullName,
+        resetURL,
+      );
+
+      const emailResult = await sendEmail({
+        to: user.email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+      });
 
       return res.status(200).json({
         success: true,
         message: "We have sent an email to you for password reset",
+        url: emailResult.previewUrl,
       });
     } catch (error) {
       return res
@@ -335,35 +356,41 @@ class UserController {
   async httpResetPassword(req, res) {
     try {
       const currentUser = req.user;
-      const resetToken = req.params.token;
-      const { newPassowrd } = req.body;
+      // const resetToken = req.params.token;
+      const { token, newPassword } = req.body;
 
       const user = await User.findOne({
-        _id: currentUser._id,
-        passwordResetToken: resetToken,
+        passwordResetToken: token,
+        passwordResetExpires: { $gt: Date.now() },
       });
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Oops, something went wrong!" });
-      }
-
-      if (user.passwordResetExpires < Date.now()) {
-        return res.status(400).json({
+        return res.status(404).json({
           success: false,
-          message: "Password reset link has expired!",
+          message: "Invalid or expired reset token, Please request a new one",
         });
       }
 
-      user.password = await bcrypt.hash(newPassword, 10);
+      // if (user.passwordResetExpires < Date.now()) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Password reset link has expired!",
+      //   });
+      // }
+
+      // const salt = await bcrypt.genSalt(10);
+
+      // user.password = await bcrypt.hash(newPassword, salt);
+      user.password = newPassword;
       user.passwordResetToken = null;
       user.passwordResetExpires = null;
 
       await user.save();
 
+      console.log("password changed", newPassword);
+
       return res
         .status(200)
-        .json({ success: true, message: "Password changed successfull ✅" });
+        .json({ success: true, message: "Password reset successfully ✅" });
     } catch (error) {
       return res
         .status(500)

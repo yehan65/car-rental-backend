@@ -64,10 +64,12 @@ const userSchema = new mongoose.Schema(
     passwordResetToken: {
       type: String,
       select: false,
+      default: null,
     },
     passwordResetExpires: {
       type: Date,
       select: false,
+      default: null,
     },
   },
   {
@@ -79,7 +81,7 @@ userSchema.index({ fullName: 1 });
 userSchema.index({ email: 1 });
 userSchema.index({ nic: 1 });
 
-// Hash password before saving
+// Hash password before saving  (pre-save hook)
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   const saltRounds = await bcrypt.genSalt(10);

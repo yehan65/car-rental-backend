@@ -13,11 +13,7 @@ userRouter.post(
   authMiddleware,
   userController.httpRequestNewLink,
 );
-userRouter.post(
-  "/forgot-password",
-  authMiddleware,
-  userController.httpForgotPassword,
-);
+userRouter.post("/forgot-password", userController.httpForgotPassword);
 userRouter.put("/update/me", authMiddleware, userController.httpUpdateUser);
 userRouter.put(
   "/update/password",
@@ -25,10 +21,6 @@ userRouter.put(
   userController.httpChangePassword,
 );
 userRouter.put("/verify-email", authMiddleware, userController.httpVerifyEmail);
-userRouter.put(
-  "/reset-password/:token",
-  authMiddleware,
-  userController.httpResetPassword,
-);
+userRouter.post("/reset-password", userController.httpResetPassword);
 
 module.exports = userRouter;
